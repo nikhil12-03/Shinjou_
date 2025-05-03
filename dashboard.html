@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | Shinjou</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <style>
+    .star-rating i {
+      cursor: pointer;
+      color: #ffc107;
+    }
+    .card.review-card {
+      border-left: 5px solid #0d6efd;
+    }
+    #categoryReviewContainer img {
+      max-width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <i class="fas fa-star me-2"></i>Trustpilot
+      </a>
+      <div class="d-flex ms-auto">
+        <button id="showCategoriesBtn" class="btn btn-outline-light me-2">Browse Categories</button>
+        <div class="dropdown">
+          <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+            <i class="fas fa-user-circle me-1"></i>
+            <span id="userName">Loading...</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end p-3" style="width: 200px;">
+            <input type="text" class="form-control mb-2" id="editUsernameInput" placeholder="Edit username">
+            <button class="btn btn-sm btn-primary w-100 mb-2" id="saveUsernameBtn">Save</button>
+            <hr class="dropdown-divider">
+            <button class="btn btn-sm btn-outline-danger w-100" id="logoutBtn">Sign Out</button>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Welcome Section -->
+  <div id="welcomeSection" class="container text-center my-5">
+    <div class="alert alert-info animate__animated animate__fadeIn">
+      👋 Welcome! What would you like to do today?
+    </div>
+    <button id="writeReviewBtn" class="btn btn-success m-2">Write a Review</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container my-5">
+    <div class="row">
+      <div class="col-lg-4 mb-4">
+        <!-- User Profile Card -->
+        <div class="card shadow animate__animated animate__fadeInLeft">
+          <div class="card-body text-center">
+            <div class="avatar mb-3">
+              <img src="https://ui-avatars.com/api/?name=User&background=random"
+                   class="rounded-circle"
+                   width="100"
+                   height="100"
+                   id="userAvatar" />
+            </div>
+            <h4 id="profileName">Loading...</h4>
+            <p class="text-muted mb-1" id="profileEmail">user@example.com</p>
+            <p class="small text-muted">Member since <span id="joinDate">2023</span></p>
+            <hr />
+            <div>
+              <h5 class="mb-0" id="reviewCount">0</h5>
+              <small class="text-muted">Reviews</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <!-- Review Management -->
+        <div class="card shadow animate__animated animate__fadeInRight">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">My Recent Reviews</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Rating</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="reviewsTable">
+                  <!-- Reviews will be populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Write New Review -->
+        <div class="card shadow mt-4 animate__animated animate__fadeInUp" id="newReviewCard" style="display: none;">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">Write a New Review</h5>
+          </div>
+          <div class="card-body">
+            <form id="newReviewForm">
+              <div class="mb-3">
+                <label for="companyName" class="form-label">Company Name</label>
+                <input type="text" class="form-control" id="companyName" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Rating</label>
+                <div class="star-rating">
+                  <i class="far fa-star" data-rating="1"></i>
+                  <i class="far fa-star" data-rating="2"></i>
+                  <i class="far fa-star" data-rating="3"></i>
+                  <i class="far fa-star" data-rating="4"></i>
+                  <i class="far fa-star" data-rating="5"></i>
+                  <input type="hidden" id="ratingValue" value="0" />
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="reviewText" class="form-label">Your Review</label>
+                <textarea class="form-control" id="reviewText" rows="3" required></textarea>
+              </div> 
+              <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Category Selector + Container -->
+        <div class="mt-5">
+          <!-- Category Buttons and Review Display -->
+<div id="categorySection" class="mt-5 text-center">
+    <h5 class="mb-3">Browse Categories</h5>
+    <div id="categoryButtons" class="d-flex flex-wrap justify-content-center gap-2 mb-4"></div>
+    <div id="categoryReviewContainer" class="row g-3"></div>
+  </div>
+  
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyBuTDl4ATMBjWuMa2CmKm9VLW36bj0f-KE",
+  authDomain: "shinjou-88e5a.firebaseapp.com",
+  projectId: "shinjou-88e5a",
+  storageBucket: "shinjou-88e5a.firebasestorage.app",
+  messagingSenderId: "1082184450301",
+  appId: "1:1082184450301:web:5fd9b903c322b115e33e94",
+  measurementId: "G-LS1E858JGZ"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    let userReviews = [];
+
+    onAuthStateChanged(auth, user => {
+      if (!user) return (window.location.href = "login.html");
+
+      const displayName = user.displayName || "User";
+      const email = user.email;
+      const joinDate = new Date(user.metadata.creationTime).getFullYear();
+
+      document.getElementById("userName").textContent = displayName;
+      document.getElementById("profileName").textContent = displayName;
+      document.getElementById("profileEmail").textContent = email;
+      document.getElementById("joinDate").textContent = joinDate;
+      document.getElementById("userAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
+
+      document.getElementById("writeReviewBtn").addEventListener("click", () => {
+        document.getElementById("welcomeSection").style.display = "none";
+        document.getElementById("newReviewCard").style.display = "block";
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        signOut(auth).then(() => window.location.href = "login.html");
+      });
+
+      document.getElementById("saveUsernameBtn").addEventListener("click", async () => {
+        const newName = document.getElementById("editUsernameInput").value.trim();
+        if (!newName) return alert("Username cannot be empty");
+        await updateProfile(user, { displayName: newName });
+        document.getElementById("userName").textContent = newName;
+        document.getElementById("profileName").textContent = newName;
+        document.getElementById("editUsernameInput").value = "";
+      });
+
+      const stars = document.querySelectorAll(".star-rating i");
+      const ratingInput = document.getElementById("ratingValue");
+      stars.forEach((star, index) => {
+        star.addEventListener("click", () => {
+          ratingInput.value = index + 1;
+          stars.forEach((s, i) => {
+            s.classList.toggle("fas", i <= index);
+            s.classList.toggle("far", i > index);
+          });
+        });
+      });
+
+      document.getElementById("newReviewForm").addEventListener("submit", e => {
+        e.preventDefault();
+        const company = document.getElementById("companyName").value;
+        const rating = parseInt(ratingInput.value);
+        const text = document.getElementById("reviewText").value;
+        const date = new Date().toLocaleDateString();
+        const review = { id: Date.now(), company, rating, text, date };
+        userReviews.push(review);
+        updateTable();
+        e.target.reset();
+        ratingInput.value = 0;
+        stars.forEach(s => s.classList.remove("fas"));
+        stars.forEach(s => s.classList.add("far"));
+      });
+
+      function updateTable() {
+        const tbody = document.getElementById("reviewsTable");
+        tbody.innerHTML = "";
+        userReviews.forEach(r => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${r.company}</td>
+            <td>${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</td>
+            <td>${r.date}</td>
+            <td>
+              <button class="btn btn-sm btn-primary me-1" data-id="${r.id}" data-action="edit">Edit</button>
+              <button class="btn btn-sm btn-danger" data-id="${r.id}" data-action="delete">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        document.getElementById("reviewCount").textContent = userReviews.length;
+
+        tbody.querySelectorAll("button").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const id = parseInt(btn.dataset.id);
+            if (btn.dataset.action === "delete") {
+              userReviews = userReviews.filter(r => r.id !== id);
+              updateTable();
+            } else {
+              const review = userReviews.find(r => r.id === id);
+              document.getElementById("companyName").value = review.company;
+              document.getElementById("reviewText").value = review.text;
+              ratingInput.value = review.rating;
+              stars.forEach((s, i) => {
+                s.classList.toggle("fas", i < review.rating);
+                s.classList.toggle("far", i >= review.rating);
+              });
+              userReviews = userReviews.filter(r => r.id !== id);
+              document.getElementById("newReviewCard").scrollIntoView({ behavior: "smooth" });
+            }
+          });
+        });
+      }
+
+      document.getElementById("showCategoriesBtn").addEventListener("click", () => {
+        document.getElementById("welcomeSection").style.display = "none";
+        document.getElementById("categorySelect").style.display = "block";
+        document.getElementById("categoryReviewContainer").style.display = "block";
+      });
+
+      // Categories list
+const categories = [
+  "Electronics Store",
+  "Travel Insurance Company",
+  "Clothing Store",
+  "Car Dealer",
+  "Furniture Store",
+  "Fitness and Nutrition Service",
+  "Pet Store",
+  "Real Estate Agents",
+  "Jewelry Store",
+  "Appliance Store"
+];
+
+// Render category buttons
+const buttonContainer = document.getElementById("categoryButtons");
+categories.forEach(cat => {
+  const btn = document.createElement("button");
+  btn.className = "btn btn-outline-primary";
+  btn.textContent = cat;
+  btn.addEventListener("click", () => loadCategoryReviews(cat));
+  buttonContainer.appendChild(btn);
+});
+
+// Load reviews by category
+async function loadCategoryReviews(category) {
+  const container = document.getElementById("categoryReviewContainer");
+  container.innerHTML = "<div class='text-muted'>Loading reviews...</div>";
+
+  try {
+    const res = await fetch("fake_reviews.json");
+    const data = await res.json();
+    const filtered = data.filter(r => r.category === category);
+
+    container.innerHTML = "";
+    filtered.forEach(r => {
+      const col = document.createElement("div");
+      col.className = "col-md-6 col-lg-4";
+      col.innerHTML = `
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+              <img src="${r.profile_pic}" class="rounded-circle me-2" width="40" height="40">
+              <strong>${r.username}</strong>
+            </div>
+            <div class="text-warning mb-2">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
+            <p class="small">${r.review_text}</p>
+            ${r.images.map(img => `<img src="${img}" class="img-fluid rounded mb-2" style="max-height:150px;">`).join("")}
+          </div>
+        </div>
+      `;
+      container.appendChild(col);
+    });
+  } catch (err) {
+    container.innerHTML = `<div class="text-danger">Failed to load reviews.</div>`;
+  }
+}
+
+    });
+  </script>
+</body>
+</html>
+

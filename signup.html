@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Shinjou</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="script.js"></script>
+</head>
+
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4 animate__animated animate__fadeIn">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4">Create Account</h2>
+
+                        <!-- Registration Form -->
+                        <form id="signupForm" autocomplete="off">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" autocomplete="off" class="form-control" id="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email address</label>
+                                <input type="email" autocomplete="off" class="form-control" id="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" autocomplete="off" class="form-control" id="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" autocomplete="off" class="form-control" id="confirmPassword"
+                                    required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Create Account</button>
+                        </form>
+
+                        <div class="text-center my-3">OR</div>
+
+                        <!-- Social Signup Buttons -->
+                        <div class="d-grid gap-2">
+                            <button id="googleSignup" class="btn btn-outline-danger">
+                                <i class="fab fa-google me-2"></i>Sign up with Google
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <p>Already have an account? <a href="login.html">Sign in</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyBuTDl4ATMBjWuMa2CmKm9VLW36bj0f-KE",
+            authDomain: "shinjou-88e5a.firebaseapp.com",
+            projectId: "shinjou-88e5a",
+            storageBucket: "shinjou-88e5a.firebasestorage.app",
+            messagingSenderId: "1082184450301",
+            appId: "1:1082184450301:web:5fd9b903c322b115e33e94",
+            measurementId: "G-LS1E858JGZ"
+        };
+
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("signupForm").reset();
+            // Sign up with email and password
+            document.getElementById("signupForm").addEventListener("submit", function (event) {
+                event.preventDefault();
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
+                const confirmPassword = document.getElementById("confirmPassword").value;
+                if (password !== confirmPassword) {
+                    alert("Passwords do not match. Please try again.");
+                    return; // stop form submission
+                }
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then(() => {
+                        alert("Account created successfully! Redirecting to login page...");
+                        window.location.href = "login.html";
+                    })
+                    .catch(error => {
+                        if (error.code === "auth/email-already-in-use") {
+                            alert("This email is already in use. Please sign in or use another email.");
+                        } else {
+                            alert(error.message);
+                        }
+                    });
+
+            });
+
+            // Sign up with Google
+            document.getElementById("googleSignup").addEventListener("click", function () {
+                signInWithPopup(auth, googleProvider)
+                    .then((result) => {
+                        const user = result.user;
+                        alert(`Signed up successfully with Google as ${user.displayName}! Redirecting...`);
+                        window.location.href = "login.html";
+                    })
+                    .catch(error => {
+                        console.error("Error during Google sign-up:", error);
+                        alert(error.message);
+                    });
+            });
+
+
+        });
+    </script>
+</body>
+
+</html>
